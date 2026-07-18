@@ -1,8 +1,8 @@
-import friendshipRepository from '../repositories/friendship.repository.js';
-import userRepository from '../repositories/user.repository.js';
-import ApiError from '../utils/ApiError.js';
-import { HTTP_STATUS } from '../constants/index.js';
-import User from '../models/User.js';
+import friendshipRepository from "../repositories/friendship.repository.js";
+import userRepository from "../repositories/user.repository.js";
+import ApiError from "../utils/ApiError.js";
+import { HTTP_STATUS } from "../constants/index.js";
+import User from "../models/User.js";
 
 const ONLINE_THRESHOLD_MS = 45000; // 45 seconds
 
@@ -16,65 +16,98 @@ const friendshipService = {
     // 1. Find user by username
     const receiver = await userRepository.findOneByUsername(cleanUsername);
     if (!receiver) {
-      throw new ApiError(HTTP_STATUS.NOT_FOUND, `User @${targetUsername} not found`);
+      throw new ApiError(
+        HTTP_STATUS.NOT_FOUND,
+        `User @${targetUsername} not found`,
+      );
     }
 
     const receiverId = receiver._id.toString();
 
     // 2. Cannot add yourself
     if (receiverId === requesterId.toString()) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'You cannot send a friend request to yourself');
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        "You cannot send a friend request to yourself",
+      );
     }
 
     // 3. Check if friendship already exists
-    const existing = await friendshipRepository.findFriendship(requesterId, receiverId);
+    const existing = await friendshipRepository.findFriendship(
+      requesterId,
+      receiverId,
+    );
 
     if (existing) {
-      if (existing.status === 'accepted') {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, `You are already friends with @${targetUsername}`);
+      if (existing.status === "accepted") {
+        throw new ApiError(
+          HTTP_STATUS.BAD_REQUEST,
+          `You are already friends with @${targetUsername}`,
+        );
       }
-      if (existing.status === 'pending') {
+      if (existing.status === "pending") {
         if (existing.requester.toString() === requesterId.toString()) {
-          throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Friend request already sent');
+          throw new ApiError(
+            HTTP_STATUS.BAD_REQUEST,
+            "Friend request already sent",
+          );
         } else {
           // If the other user already sent a request, auto-accept it!
-          existing.status = 'accepted';
+          existing.status = "accepted";
           await existing.save();
-          return { friendship: existing, message: `Auto-accepted pending request from @${targetUsername}!` };
+          return {
+            friendship: existing,
+            message: `Auto-accepted pending request from @${targetUsername}!`,
+          };
         }
       }
       // If declined, update back to pending and reset requester to me
-      if (existing.status === 'declined') {
-        existing.status = 'pending';
+      if (existing.status === "declined") {
+        existing.status = "pending";
         existing.requester = requesterId;
         existing.receiver = receiverId;
         await existing.save();
-        return { friendship: existing, message: 'Friend request sent successfully' };
+        return {
+          friendship: existing,
+          message: "Friend request sent successfully",
+        };
       }
     }
 
     // 4. Create new request
-    const friendship = await friendshipRepository.createFriendship(requesterId, receiverId);
-    return { friendship, message: 'Friend request sent successfully' };
+    const friendship = await friendshipRepository.createFriendship(
+      requesterId,
+      receiverId,
+    );
+    return { friendship, message: "Friend request sent successfully" };
   },
 
   /**
    * Respond to friend request (accept or decline).
    */
   respondToRequest: async (receiverId, requesterId, action) => {
-    if (!['accept', 'decline'].includes(action)) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid action. Must be accept or decline');
+    if (!["accept", "decline"].includes(action)) {
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        "Invalid action. Must be accept or decline",
+      );
     }
 
     // Find the pending request sent by requesterId to receiverId
-    const friendship = await friendshipRepository.findByRequesterAndReceiver(requesterId, receiverId);
+    const friendship = await friendshipRepository.findByRequesterAndReceiver(
+      requesterId,
+      receiverId,
+    );
 
-    if (!friendship || friendship.status !== 'pending') {
-      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Pending friend request not found');
+    if (!friendship || friendship.status !== "pending") {
+      throw new ApiError(
+        HTTP_STATUS.NOT_FOUND,
+        "Pending friend request not found",
+      );
     }
 
-    if (action === 'accept') {
-      friendship.status = 'accepted';
+    if (action === "accept") {
+      friendship.status = "accepted";
       await friendship.save();
       return friendship;
     } else {
@@ -91,22 +124,24 @@ const friendshipService = {
     const list = await friendshipRepository.findAcceptedFriendships(userId);
     const threshold = new Date(Date.now() - ONLINE_THRESHOLD_MS);
 
-    return list.map(item => {
+    return list.map((item) => {
       // The friend is the side that is not the logged-in userId
-      const friendObj = item.requester._id.toString() === userId.toString()
-        ? item.receiver
-        : item.requester;
+      const friendObj =
+        item.requester._id.toString() === userId.toString()
+          ? item.receiver
+          : item.requester;
 
       const userJson = friendObj.toJSON();
-      const isOnline = userJson.lastActive && new Date(userJson.lastActive) > threshold;
+      const isOnline =
+        userJson.lastActive && new Date(userJson.lastActive) > threshold;
 
       return {
         id: userJson._id,
         username: userJson.username,
         fullName: userJson.fullName,
         avatar: userJson.avatar,
-        online: false,
-        activity: userJson.activity || 'idle',
+        online: isOnline,
+        activity: userJson.activity || "idle",
       };
     });
   },
@@ -115,8 +150,9 @@ const friendshipService = {
    * Get incoming pending requests.
    */
   getPendingRequests: async (userId) => {
-    const list = await friendshipRepository.findPendingRequestsReceivedBy(userId);
-    return list.map(item => ({
+    const list =
+      await friendshipRepository.findPendingRequestsReceivedBy(userId);
+    return list.map((item) => ({
       id: item.requester._id,
       username: item.requester.username,
       fullName: item.requester.fullName,

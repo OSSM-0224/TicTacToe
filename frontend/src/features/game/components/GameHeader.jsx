@@ -1,23 +1,37 @@
-import { Bell, LogOut, Users, UserPlus, X, Send, Wifi, Check, Play } from 'lucide-react';
-import { useNavigate } from 'react-router';
-import { useDispatch, useSelector } from 'react-redux';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
-import { useState, useRef, useEffect, useCallback } from 'react';
-import useAuth from '@/features/auth/hooks/useAuth';
-import authService from '@/features/auth/services/auth.service';
-import { ROUTES } from '@/constants';
-import friendsApi from '../api/friends.api';
-import gameApi from '../api/game.api';
-import authApi from '@/features/auth/api/auth.api';
-import { updateUser, selectUser } from '@/store/authSlice';
-import ConnectionManager from '../services/ConnectionManager';
+import {
+  Bell,
+  LogOut,
+  Users,
+  UserPlus,
+  X,
+  Send,
+  Wifi,
+  Check,
+  Play,
+} from "lucide-react";
+import { useNavigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { useState, useRef, useEffect, useCallback } from "react";
+import useAuth from "@/features/auth/hooks/useAuth";
+import authService from "@/features/auth/services/auth.service";
+import { ROUTES } from "@/constants";
+import friendsApi from "../api/friends.api";
+import gameApi from "../api/game.api";
+import authApi from "@/features/auth/api/auth.api";
+import { updateUser, selectUser } from "@/store/authSlice";
+import ConnectionManager from "../services/ConnectionManager";
 
 /* ─── Single friend row ─────────────────────────────────────────────────── */
 const FriendRow = ({ friend, index, onInvite }) => {
   const initials = friend.fullName
-    ? friend.fullName.split(' ').map(w => w[0]).join('').toUpperCase()
-    : 'U';
+    ? friend.fullName
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+    : "U";
 
   const [inviting, setInviting] = useState(false);
 
@@ -36,13 +50,21 @@ const FriendRow = ({ friend, index, onInvite }) => {
       className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/60 rounded-xl transition-colors cursor-pointer"
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.045, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        delay: index * 0.045,
+        duration: 0.3,
+        ease: [0.22, 1, 0.36, 1],
+      }}
     >
       <div className="flex items-center gap-3 min-w-0">
         {/* Avatar */}
         <div className="relative flex-shrink-0">
           {friend.avatar ? (
-            <img src={friend.avatar} alt={friend.fullName} className="w-9 h-9 rounded-full object-cover bg-muted animate-none" />
+            <img
+              src={friend.avatar}
+              alt={friend.fullName}
+              className="w-9 h-9 rounded-full object-cover bg-muted animate-none"
+            />
           ) : (
             <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center">
               <span className="text-xs font-bold text-primary">{initials}</span>
@@ -51,22 +73,26 @@ const FriendRow = ({ friend, index, onInvite }) => {
           {/* Online dot below avatar */}
           <span
             className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${
-              friend.online ? 'bg-muted-foreground/30' : 'bg-emerald-500'
+              friend.online ? "bg-emerald-500" : "bg-muted-foreground/30"
             }`}
           />
         </div>
 
         {/* Info */}
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{friend.fullName}</p>
-          <p className="text-xs text-muted-foreground truncate">@{friend.username}</p>
+          <p className="text-sm font-semibold text-foreground truncate">
+            {friend.fullName}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">
+            @{friend.username}
+          </p>
         </div>
       </div>
 
       {/* Action panel (replaces the online/offline status text badge) */}
       <div className="flex-shrink-0">
         {friend.online ? (
-          friend.activity === 'playing' ? (
+          friend.activity === "playing" ? (
             <span className="text-xs text-muted-foreground/50 font-medium px-2 py-1 bg-muted/40 rounded-md select-none">
               In Game
             </span>
@@ -77,7 +103,7 @@ const FriendRow = ({ friend, index, onInvite }) => {
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
             >
               <Play className="w-3 h-3 fill-current" />
-              <span>{inviting ? 'Inviting...' : 'Invite'}</span>
+              <span>{inviting ? "Inviting..." : "Invite"}</span>
             </button>
           )
         ) : null}
@@ -89,41 +115,59 @@ const FriendRow = ({ friend, index, onInvite }) => {
 /* ─── Single pending request row ────────────────────────────────────────── */
 const PendingRow = ({ request, onRespond, index }) => {
   const initials = request.fullName
-    ? request.fullName.split(' ').map(w => w[0]).join('').toUpperCase()
-    : 'U';
+    ? request.fullName
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+    : "U";
 
   return (
     <motion.div
       className="flex items-center justify-between gap-3 px-4 py-2 hover:bg-muted/40 rounded-xl transition-colors"
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.045, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        delay: index * 0.045,
+        duration: 0.3,
+        ease: [0.22, 1, 0.36, 1],
+      }}
     >
       <div className="flex items-center gap-3 min-w-0">
         {/* Avatar */}
         {request.avatar ? (
-          <img src={request.avatar} alt={request.fullName} className="w-8 h-8 rounded-full object-cover bg-muted animate-none" />
+          <img
+            src={request.avatar}
+            alt={request.fullName}
+            className="w-8 h-8 rounded-full object-cover bg-muted animate-none"
+          />
         ) : (
           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-[11px] font-bold text-primary">{initials}</span>
+            <span className="text-[11px] font-bold text-primary">
+              {initials}
+            </span>
           </div>
         )}
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-foreground truncate">{request.fullName}</p>
-          <p className="text-[10px] text-muted-foreground truncate">@{request.username}</p>
+          <p className="text-xs font-semibold text-foreground truncate">
+            {request.fullName}
+          </p>
+          <p className="text-[10px] text-muted-foreground truncate">
+            @{request.username}
+          </p>
         </div>
       </div>
 
       <div className="flex items-center gap-1">
         <button
-          onClick={() => onRespond(request.id, 'accept')}
+          onClick={() => onRespond(request.id, "accept")}
           className="p-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer transition-colors"
           title="Accept"
         >
           <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
         </button>
         <button
-          onClick={() => onRespond(request.id, 'decline')}
+          onClick={() => onRespond(request.id, "decline")}
           className="p-1 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground cursor-pointer transition-colors"
           title="Decline"
         >
@@ -137,7 +181,7 @@ const PendingRow = ({ request, onRespond, index }) => {
 /* ─── Friends Panel ─────────────────────────────────────────────────────── */
 const FriendsPanel = ({ onClose, friends, pending, onRefresh, onInvite }) => {
   const [addingFriend, setAddingFriend] = useState(false);
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
 
@@ -150,12 +194,12 @@ const FriendsPanel = ({ onClose, friends, pending, onRefresh, onInvite }) => {
     setLoading(true);
     try {
       const response = await friendsApi.sendRequest(username.trim());
-      toast.success(response.data.message || 'Friend request sent!');
-      setUsername('');
+      toast.success(response.data.message || "Friend request sent!");
+      setUsername("");
       setAddingFriend(false);
       onRefresh();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to send request');
+      toast.error(error.response?.data?.message || "Failed to send request");
     } finally {
       setLoading(false);
     }
@@ -164,19 +208,21 @@ const FriendsPanel = ({ onClose, friends, pending, onRefresh, onInvite }) => {
   const handleRespond = async (requesterId, action) => {
     try {
       await friendsApi.respondToRequest(requesterId, action);
-      toast.success(action === 'accept' ? 'Request accepted!' : 'Request declined');
+      toast.success(
+        action === "accept" ? "Request accepted!" : "Request declined",
+      );
       onRefresh();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Action failed');
+      toast.error(error.response?.data?.message || "Action failed");
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleSendRequest();
-    if (e.key === 'Escape') setAddingFriend(false);
+    if (e.key === "Enter") handleSendRequest();
+    if (e.key === "Escape") setAddingFriend(false);
   };
 
-  const onlineCount = friends.filter(f => f.online).length;
+  const onlineCount = friends.filter((f) => f.online).length;
 
   return (
     <motion.div
@@ -184,8 +230,8 @@ const FriendsPanel = ({ onClose, friends, pending, onRefresh, onInvite }) => {
       initial={{ opacity: 0, y: -12, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -12, scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-      style={{ transformOrigin: 'top right' }}
+      transition={{ type: "spring", stiffness: 420, damping: 28 }}
+      style={{ transformOrigin: "top right" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
@@ -199,17 +245,17 @@ const FriendsPanel = ({ onClose, friends, pending, onRefresh, onInvite }) => {
         {/* Add Friend Toggle Button */}
         <button
           onClick={() => {
-            setAddingFriend(p => !p);
-            if (addingFriend) setUsername('');
+            setAddingFriend((p) => !p);
+            if (addingFriend) setUsername("");
           }}
           className={`p-2 rounded-lg transition-colors cursor-pointer hover:bg-muted ${
-            addingFriend ? 'text-primary' : 'text-muted-foreground'
+            addingFriend ? "text-primary" : "text-muted-foreground"
           }`}
-          title={addingFriend ? 'Cancel' : 'Add Friend'}
+          title={addingFriend ? "Cancel" : "Add Friend"}
         >
           <motion.div
             animate={{ rotate: addingFriend ? 90 : 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
             {addingFriend ? (
               <X className="w-5 h-5" strokeWidth={2} />
@@ -226,19 +272,23 @@ const FriendsPanel = ({ onClose, friends, pending, onRefresh, onInvite }) => {
           <motion.div
             className="px-4 pt-3 pb-2 border-b border-border bg-muted/30"
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="text-xs text-muted-foreground mb-2 font-medium">Enter a username to add</p>
+            <p className="text-xs text-muted-foreground mb-2 font-medium">
+              Enter a username to add
+            </p>
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm select-none">@</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm select-none">
+                  @
+                </span>
                 <input
                   ref={inputRef}
                   type="text"
                   value={username}
-                  onChange={e => setUsername(e.target.value)}
+                  onChange={(e) => setUsername(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="username"
                   disabled={loading}
@@ -267,7 +317,12 @@ const FriendsPanel = ({ onClose, friends, pending, onRefresh, onInvite }) => {
           </p>
           <div className="max-h-32 overflow-y-auto px-1">
             {pending.map((req, i) => (
-              <PendingRow key={req.id} request={req} onRespond={handleRespond} index={i} />
+              <PendingRow
+                key={req.id}
+                request={req}
+                onRespond={handleRespond}
+                index={i}
+              />
             ))}
           </div>
         </div>
@@ -278,11 +333,18 @@ const FriendsPanel = ({ onClose, friends, pending, onRefresh, onInvite }) => {
         {friends.length === 0 ? (
           <div className="text-center py-8 px-4">
             <p className="text-sm text-muted-foreground">No friends yet.</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Add someone using their username to start playing!</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Add someone using their username to start playing!
+            </p>
           </div>
         ) : (
           friends.map((friend, i) => (
-            <FriendRow key={friend.id} friend={friend} index={i} onInvite={onInvite} />
+            <FriendRow
+              key={friend.id}
+              friend={friend}
+              index={i}
+              onInvite={onInvite}
+            />
           ))
         )}
       </div>
@@ -290,8 +352,8 @@ const FriendsPanel = ({ onClose, friends, pending, onRefresh, onInvite }) => {
   );
 };
 
-import OnlineGame from './OnlineGame';
-import GameProvider from '../providers/GameProvider';
+import OnlineGame from "./OnlineGame";
+import GameProvider from "../providers/GameProvider";
 
 /* ─── Game Header ───────────────────────────────────────────────────────── */
 const GameHeader = () => {
@@ -309,7 +371,7 @@ const GameHeader = () => {
 
   const handleLogout = () => {
     authService.logout(dispatch);
-    toast.success('Logged out successfully');
+    toast.success("Logged out successfully");
     navigate(ROUTES.LOGIN, { replace: true });
   };
 
@@ -338,7 +400,7 @@ const GameHeader = () => {
         const response = await authApi.getMe();
         dispatch(updateUser(response.data.data.user));
       } catch (e) {
-        console.error('Failed to sync profile', e);
+        console.error("Failed to sync profile", e);
       }
     }, 4000);
     return () => clearInterval(interval);
@@ -347,8 +409,8 @@ const GameHeader = () => {
   // 2.5 Real-Time Invite Acceptance Listener
   useEffect(() => {
     if (!user) return;
-    const unsubscribe = ConnectionManager.subscribe('invite-accepted', () => {
-      dispatch(updateUser({ activity: 'playing' }));
+    const unsubscribe = ConnectionManager.subscribe("invite-accepted", () => {
+      dispatch(updateUser({ activity: "playing" }));
     });
     return () => {
       unsubscribe();
@@ -366,7 +428,7 @@ const GameHeader = () => {
       setFriends(friendsRes.data.data || []);
       setPending(pendingRes.data.data || []);
     } catch (error) {
-      console.error('Failed to fetch friends data', error);
+      console.error("Failed to fetch friends data", error);
     }
   };
 
@@ -394,7 +456,7 @@ const GameHeader = () => {
           }
         });
       } catch (error) {
-        console.error('Failed to poll game invites', error);
+        console.error("Failed to poll game invites", error);
       }
     };
 
@@ -407,15 +469,14 @@ const GameHeader = () => {
   const handleRespondInvite = async (inviteId, action) => {
     try {
       const response = await gameApi.respond(inviteId, action);
-      if (action === 'accept') {
-        toast.success('Joined online match!');
-        dispatch(updateUser({ activity: 'playing' }));
-      } else {
-        toast.success('Invitation declined');
+
+      seenInvitesRef.current.delete(inviteId);
+
+      if (action === "accept") {
+        toast.success("Joined online match!");
+        dispatch(updateUser({ activity: "playing" }));
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Response action failed');
-    }
+    } catch (error) {}
   };
 
   // 7. Trigger Sonner invite prompt toast
@@ -424,7 +485,9 @@ const GameHeader = () => {
       (t) => (
         <div className="bg-background border border-border p-4 rounded-2xl shadow-xl flex flex-col gap-2.5 max-w-sm w-full pointer-events-auto">
           <div>
-            <p className="text-sm font-bold text-foreground">Play Tic Tac Toe!</p>
+            <p className="text-sm font-bold text-foreground">
+              Play Tic Tac Toe!
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               @{invite.sender.username} has invited you to an online match.
             </p>
@@ -435,7 +498,7 @@ const GameHeader = () => {
           <div className="flex gap-2 justify-end">
             <button
               onClick={() => {
-                handleRespondInvite(invite._id, 'accept');
+                handleRespondInvite(invite._id, "reject");
                 toast.dismiss(t);
               }}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
@@ -444,7 +507,7 @@ const GameHeader = () => {
             </button>
             <button
               onClick={() => {
-                handleRespondInvite(invite._id, 'reject');
+                handleRespondInvite(invite._id, "accept");
                 toast.dismiss(t);
               }}
               className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
@@ -457,7 +520,7 @@ const GameHeader = () => {
       {
         duration: 300000, // Valid for 5 minutes (300,000 milliseconds)
         id: invite._id,
-      }
+      },
     );
   };
 
@@ -467,7 +530,9 @@ const GameHeader = () => {
       await gameApi.invite(friendId);
       toast.success(`Invite request sent to ${friendName}!`);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to send game invite');
+      toast.error(
+        error.response?.data?.message || "Failed to send game invite",
+      );
     }
   };
 
@@ -475,10 +540,10 @@ const GameHeader = () => {
   const handleLeaveGame = useCallback(async () => {
     try {
       await gameApi.leave();
-      dispatch(updateUser({ activity: 'idle' }));
-      toast.success('Left match successfully');
+      dispatch(updateUser({ activity: "idle" }));
+      toast.success("Left match successfully");
     } catch (error) {
-      toast.error('Failed to leave match lobby');
+      toast.error("Failed to leave match lobby");
     }
   }, [dispatch]);
 
@@ -489,8 +554,8 @@ const GameHeader = () => {
         setFriendsPanelOpen(false);
       }
     };
-    if (friendsPanelOpen) document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    if (friendsPanelOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [friendsPanelOpen]);
 
   const onlineCount = friends.filter((f) => f.online).length;
@@ -521,7 +586,6 @@ const GameHeader = () => {
 
             {/* Right Section */}
             <div className="flex items-center gap-2">
-
               {/* Notification */}
               <motion.button
                 className="relative p-2 hover:bg-muted rounded-lg transition-colors"
@@ -540,17 +604,34 @@ const GameHeader = () => {
                   onClick={() => setFriendsPanelOpen((p) => !p)}
                   className="relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                   whileTap={{ scale: 0.95 }}
-                  animate={friendsPanelOpen ? { backgroundColor: 'var(--color-muted, hsl(240 4.8% 95.9%))' } : {}}
+                  animate={
+                    friendsPanelOpen
+                      ? {
+                          backgroundColor:
+                            "var(--color-muted, hsl(240 4.8% 95.9%))",
+                        }
+                      : {}
+                  }
                 >
                   <motion.div
-                    animate={friendsPanelOpen
-                      ? { rotate: [0, -8, 8, 0], scale: 1.1, transition: { duration: 0.4 } }
-                      : { rotate: 0, scale: 1 }
+                    animate={
+                      friendsPanelOpen
+                        ? {
+                            rotate: [0, -8, 8, 0],
+                            scale: 1.1,
+                            transition: { duration: 0.4 },
+                          }
+                        : { rotate: 0, scale: 1 }
                     }
                   >
-                    <Users className="h-5 w-5 text-foreground" strokeWidth={1.8} />
+                    <Users
+                      className="h-5 w-5 text-foreground"
+                      strokeWidth={1.8}
+                    />
                   </motion.div>
-                  <span className="text-sm font-medium text-foreground hidden sm:block">Friends</span>
+                  <span className="text-sm font-medium text-foreground hidden sm:block">
+                    Friends
+                  </span>
 
                   {/* Online badge */}
                   {onlineCount > 0 && (
@@ -558,7 +639,11 @@ const GameHeader = () => {
                       className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 600, damping: 14 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 600,
+                        damping: 14,
+                      }}
                     >
                       {onlineCount}
                     </motion.span>
@@ -589,8 +674,8 @@ const GameHeader = () => {
                   className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer select-none"
                   animate={{
                     backgroundColor: isProfileHovered
-                      ? 'var(--color-muted, hsl(240 4.8% 95.9%))'
-                      : 'transparent',
+                      ? "var(--color-muted, hsl(240 4.8% 95.9%))"
+                      : "transparent",
                   }}
                   transition={{ duration: 0.2 }}
                 >
@@ -602,7 +687,7 @@ const GameHeader = () => {
                             rotate: [0, -8, 8, -5, 5, -3, 3, 0],
                             y: [0, -5, 0, -3, 0],
                             scale: [1, 1.1, 1],
-                            transition: { duration: 0.6, ease: 'easeInOut' },
+                            transition: { duration: 0.6, ease: "easeInOut" },
                           }
                         : { rotate: 0, y: 0, scale: 1 }
                     }
@@ -615,8 +700,8 @@ const GameHeader = () => {
                         className="w-9 h-9 rounded-full bg-muted object-cover animate-none"
                         animate={{
                           boxShadow: isProfileHovered
-                            ? '0 0 0 3px hsl(var(--primary) / 0.35)'
-                            : '0 0 0 2px transparent',
+                            ? "0 0 0 3px hsl(var(--primary) / 0.35)"
+                            : "0 0 0 2px transparent",
                         }}
                         transition={{ duration: 0.25 }}
                       />
@@ -625,13 +710,13 @@ const GameHeader = () => {
                         className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center"
                         animate={{
                           boxShadow: isProfileHovered
-                            ? '0 0 0 3px hsl(var(--primary) / 0.35)'
-                            : '0 0 0 2px transparent',
+                            ? "0 0 0 3px hsl(var(--primary) / 0.35)"
+                            : "0 0 0 2px transparent",
                         }}
                         transition={{ duration: 0.25 }}
                       >
                         <span className="text-sm font-bold text-primary">
-                          {user?.fullName?.[0]?.toUpperCase() ?? 'O'}
+                          {user?.fullName?.[0]?.toUpperCase() ?? "O"}
                         </span>
                       </motion.div>
                     )}
@@ -645,7 +730,11 @@ const GameHeader = () => {
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0, opacity: 0 }}
-                          transition={{ type: 'spring', stiffness: 600, damping: 14 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 600,
+                            damping: 14,
+                          }}
                         />
                       )}
                     </AnimatePresence>
@@ -653,7 +742,7 @@ const GameHeader = () => {
 
                   {/* Name */}
                   <span className="text-sm font-medium text-foreground">
-                    {user?.fullName ?? 'Om Pawar'}
+                    {user?.fullName ?? "Om Pawar"}
                   </span>
                 </motion.div>
 
@@ -664,11 +753,15 @@ const GameHeader = () => {
                       key="logout-btn"
                       onClick={handleLogout}
                       className="absolute top-full left-1/2 mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold shadow-lg whitespace-nowrap cursor-pointer"
-                      style={{ x: '-50%' }}
+                      style={{ x: "-50%" }}
                       initial={{ opacity: 0, y: -8, scale: 0.85 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.85 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 22,
+                      }}
                       whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.94 }}
                     >
@@ -685,12 +778,9 @@ const GameHeader = () => {
 
       {/* Online Game Mode Overlay */}
       <AnimatePresence>
-        {user?.activity === 'playing' && (
+        {user?.activity === "playing" && (
           <GameProvider onGameExit={handleLeaveGame}>
-            <OnlineGame
-              currentUser={user}
-              onGameExit={handleLeaveGame}
-            />
+            <OnlineGame currentUser={user} onGameExit={handleLeaveGame} />
           </GameProvider>
         )}
       </AnimatePresence>

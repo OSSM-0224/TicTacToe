@@ -26,6 +26,7 @@ export const GameBoard = React.memo(({
       />
 
       {/* Online/Connection Status Backdrop Overlay */}
+      
       {showOverlay && (
         <div className="absolute inset-0 z-20 bg-background/80 backdrop-blur-[2.5px] flex flex-col items-center justify-center text-center p-6">
           {isDisconnected ? (

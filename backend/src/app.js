@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
@@ -6,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 
 import { env } from './config/env.js';
 import routes from './routes/index.js';
+
 import errorMiddleware from './middlewares/error.middleware.js';
 import notFoundMiddleware from './middlewares/notFound.middleware.js';
 
@@ -13,6 +15,14 @@ const app = express();
 
 // ─── Security ───────────────────────────────────────────────────────────────
 app.use(helmet());
+
+// ─── CORS ───────────────────────────────────────────────────────────────────
+app.use(cors({
+  origin: env.CLIENT_ORIGIN,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // ─── Rate Limiting ───────────────────────────────────────────────────────────
 const limiter = rateLimit({
@@ -26,6 +36,8 @@ const limiter = rateLimit({
     message: 'Too many requests, please try again later.',
   },
 });
+
+
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

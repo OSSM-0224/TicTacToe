@@ -1,13 +1,14 @@
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 
-const socketUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5000'
-  : window.location.origin;
+const socketUrl =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "http://localhost:5000"
+    : "https://tictactoe1-2j30.onrender.com";
 
-// Single production-grade socket instance
 export const socket = io(socketUrl, {
   autoConnect: false,
-  transports: ['websocket'],
+  transports: ["websocket"],
   reconnection: true,
   reconnectionAttempts: 10,
   reconnectionDelay: 1000,
